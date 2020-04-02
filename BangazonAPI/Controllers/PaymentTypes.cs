@@ -41,7 +41,8 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT Id, Name, Active From PaymentType";
+                    cmd.CommandText = @"SELECT Id, Name, Active From PaymentType
+                                        WHERE Active = 1";
 
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<PaymentType> paymentTypes = new List<PaymentType>();
@@ -75,7 +76,8 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = @"SELECT Id, Name, Active FROM PaymentType
-                                        WHERE Id = @id";
+                                        WHERE Active = 1
+                                        AND Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -134,7 +136,7 @@ namespace BangazonAPI.Controllers
                     {
                         cmd.CommandText = @"UPDATE PaymentType
                                             SET Name = @Name,
-                                                Active = @Active
+                                            Active = @Active
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@Name", paymentType.Name));
                         cmd.Parameters.Add(new SqlParameter("@Active", paymentType.Active));
@@ -172,9 +174,10 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"DELETE FROM PaymentType WHERE Id = @id";
+                        cmd.CommandText = @"UPDATE PaymentType
+                                            SET Active = 0
+                                            WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
-
                         int rowsAffected = cmd.ExecuteNonQuery();
                         if (rowsAffected > 0)
                         {
