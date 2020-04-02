@@ -31,8 +31,6 @@ namespace BangazonAPI.Controllers
             }
         }
 
-
-
         [HttpGet]
         public async Task<IActionResult> Get()
         {
