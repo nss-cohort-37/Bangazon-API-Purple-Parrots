@@ -70,37 +70,25 @@ namespace BangazonAPI.Controllers
         }
 
         [HttpGet("{id}", Name = "GetProductType")]
-        public async Task<IActionResult> Get([FromRoute] int id)
+        public async Task<IActionResult> Get(
+            [FromRoute] int id,
+            [FromQuery] string include)
         {
-            using (SqlConnection conn = Connection)
+            if (include == "products")
             {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = @"SELECT Id, Name FROM ProductType
-                                         WHERE Id = @id";
-                    cmd.Parameters.Add(new SqlParameter("@id", id));
-                    SqlDataReader reader = cmd.ExecuteReader();
-
-                    ProductType productType = null;
-
-                    if (reader.Read())
-                    {
-                        productType = new ProductType
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            Name = reader.GetString(reader.GetOrdinal("Name")),
-                            
-
-                        };
-                    }
-                    reader.Close();
-
-                    return Ok(productType);
-                }
+                var productsWithProductType = GetProductWithId(id);
+                return Ok(productsWithProductType);
             }
-        }
+            else
+            {
+                var productType = GetProductType(id);
+                return Ok(productType);
+            }
 
+
+        }
+        
+     
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] ProductType productType)
         {
@@ -192,6 +180,82 @@ namespace BangazonAPI.Controllers
                 else
                 {
                     throw;
+                }
+            }
+        }
+
+        private ProductType GetProductWithId(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT pt.Id, pt.Name, p.Id AS ProductId, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.Description
+                                        FROM ProductType pt
+                                        LEFT JOIN Product p ON pt.Id = p.ProductTypeId
+                                         WHERE pt.Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    ProductType productType = null;
+
+                    if (reader.Read())
+                    {
+                        productType = new ProductType
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            Product = new List<Product>()
+
+                        };
+                    }
+                    productType.Product.Add(new Product()
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                        DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
+                        ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                        CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                        Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                        Title = reader.GetString(reader.GetOrdinal("Title")),
+                        Description = reader.GetString(reader.GetOrdinal("Description")),
+
+                    });
+                    reader.Close();
+
+                    return productType;
+                }
+            }
+        }
+
+
+        private ProductType GetProductType(int id)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT Id, Name FROM ProductType
+                                         WHERE Id = @id";
+                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                     ProductType productType = null;
+
+                    if (reader.Read())
+                    {
+                        productType = new ProductType
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            Name = reader.GetString(reader.GetOrdinal("Name")),
+                            
+
+                        };
+                        }
+                    reader.Close();
+
+                    return productType;
                 }
             }
         }
