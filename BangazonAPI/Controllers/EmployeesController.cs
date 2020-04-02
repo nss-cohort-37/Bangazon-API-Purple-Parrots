@@ -63,7 +63,6 @@ namespace BangazonAPI.Controllers
 
 
 
-
                         };
 
                         employees.Add(employee);
@@ -83,7 +82,8 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId, e.Email, e.IsSupervisor, e.ComputerId, c.Id AS ComputerId, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model 
+                    cmd.CommandText = @"SELECT e.Id, e.FirstName, e.LastName, e.DepartmentId, e.Email, e.IsSupervisor, e.ComputerId, 
+                                        c.Id AS ComputerId, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model 
                                         From Employee e
                                         LEFT JOIN Computer c ON c.Id = e.ComputerId
                                         WHERE e.Id = @id";
@@ -107,7 +107,6 @@ namespace BangazonAPI.Controllers
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("ComputerId")),
                                 PurchaseDate = reader.GetDateTime(reader.GetOrdinal("PurchaseDate")),
-                                DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate")),
                                 Make = reader.GetString(reader.GetOrdinal("Make")),
                                 Model = reader.GetString(reader.GetOrdinal("Model"))
 
@@ -117,6 +116,11 @@ namespace BangazonAPI.Controllers
 
 
                         };
+                        //checks against db to return nullable decomissiondate field
+                        if (!reader.IsDBNull(reader.GetOrdinal("DecomissionDate")))
+                        {
+                            employee.Computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
+                        }
                     }
                     reader.Close();
 
