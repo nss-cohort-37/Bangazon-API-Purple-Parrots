@@ -63,7 +63,6 @@ namespace BangazonAPI.Controllers
 
 
 
-
                         };
 
                         employees.Add(employee);
@@ -108,7 +107,6 @@ namespace BangazonAPI.Controllers
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("ComputerId")),
                                 PurchaseDate = reader.GetDateTime(reader.GetOrdinal("PurchaseDate")),
-                                DecomissionDate = reader.GetNullableDateTime("DecomissionDate"),
                                 Make = reader.GetString(reader.GetOrdinal("Make")),
                                 Model = reader.GetString(reader.GetOrdinal("Model"))
 
@@ -118,6 +116,11 @@ namespace BangazonAPI.Controllers
 
 
                         };
+                        //checks against db to return nullable decomissiondate field
+                        if (!reader.IsDBNull(reader.GetOrdinal("DecomissionDate")))
+                        {
+                            employee.Computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
+                        }
                     }
                     reader.Close();
 
