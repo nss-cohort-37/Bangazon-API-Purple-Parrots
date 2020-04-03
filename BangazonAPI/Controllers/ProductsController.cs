@@ -41,7 +41,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"Select Id, DateAdded, ProductType, CustomerId, Price, Title, Description 
+                    cmd.CommandText = @"Select Id, DateAdded, ProductTypeId, CustomerId, Price, Title, Description 
                                       FROM Product
                                       WHERE 1 = 1";
 
@@ -55,7 +55,7 @@ namespace BangazonAPI.Controllers
 
                     if(sortBy == "recent")
                     {
-                        cmd.CommandText = @"Select Id, DateAdded, ProductType, CustomerId, Price, Title, Description 
+                        cmd.CommandText = @"Select Id, DateAdded, ProductTypeId, CustomerId, Price, Title, Description 
                                             FROM Product
                                             WHERE 1=1
                                             ORDER BY DateAdded DESC";
@@ -63,7 +63,7 @@ namespace BangazonAPI.Controllers
 
                     if (sortBy == "popularity")
                     {
-                        cmd.CommandText = @"p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularCount
+                        cmd.CommandText = @"Select p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularCount
                                             FROM Product p                                      
                                             LEFT JOIN OrderProduct op ON p.Id = op.ProductId
                                             GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded                                       
@@ -112,7 +112,7 @@ namespace BangazonAPI.Controllers
                     cmd.CommandText = @"INSERT INTO Product (DateAdded, ProductTypeId, CustomerId, Price, Title, Description)
                                         OUTPUT INSERTED.Id
                                         VALUES (@DateAdded, @ProductTypeId, @CustomerId, @Price, @Title, @Description)";
-                    cmd.Parameters.Add(new SqlParameter("@DateAdded", product.DateAdded));
+                    cmd.Parameters.Add(new SqlParameter("@DateAdded", DateTime.Now));
                     cmd.Parameters.Add(new SqlParameter("@ProductTypeId", product.ProductTypeId));
                     cmd.Parameters.Add(new SqlParameter("@CustomerId", product.CustomerId));
                     cmd.Parameters.Add(new SqlParameter("@Price", product.Price));
@@ -124,6 +124,7 @@ namespace BangazonAPI.Controllers
 
                     int newId = (int)cmd.ExecuteScalar();
                     product.Id = newId;
+                    product.DateAdded = DateTime.Now;
                     return CreatedAtRoute("GetProduct", new { id = newId }, product);
                 }
             }
@@ -140,14 +141,12 @@ namespace BangazonAPI.Controllers
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = @"UPDATE Product
-                                            SET DateAdded = @DateAdded,
-                                                ProductTypeId = @ProductTypeId,
+                                           SET  ProductTypeId = @ProductTypeId,
                                                 CustomerId = @CustomerId,
                                                 Price = @Price, 
                                                 Title = @Title,
                                                 Description = @Description
                                             WHERE Id = @id";
-                        cmd.Parameters.Add(new SqlParameter("@DateAdded", product.DateAdded));
                         cmd.Parameters.Add(new SqlParameter("@ProductTypeId", product.ProductTypeId));
                         cmd.Parameters.Add(new SqlParameter("@CustomerId", product.CustomerId));
                         cmd.Parameters.Add(new SqlParameter("@Price", product.Price));
