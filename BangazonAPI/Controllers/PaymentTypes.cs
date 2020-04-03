@@ -31,8 +31,6 @@ namespace BangazonAPI.Controllers
             }
         }
 
-
-
         [HttpGet]
         public async Task<IActionResult> Get()
         {
@@ -187,6 +185,7 @@ namespace BangazonAPI.Controllers
                     }
                 }
             }
+
             catch (Exception)
             {
                 if (!PaymentTypeExists(id))
