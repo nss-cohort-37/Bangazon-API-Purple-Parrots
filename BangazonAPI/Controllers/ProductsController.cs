@@ -34,7 +34,7 @@ namespace BangazonAPI.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] string sortBy, [FromQuery]  string q)
+        public async Task<IActionResult> Get([FromQuery] string sortBy, [FromQuery]  string q, [FromQuery] bool asc)
         {
             using (SqlConnection conn = Connection)
             {
@@ -69,6 +69,18 @@ namespace BangazonAPI.Controllers
                                             GROUP BY p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded                                       
                                             HAVING 1=1";
                     }
+
+                    if (sortBy == "price" && asc == true)
+                    {
+
+                    }
+
+                    if(sortBy == "price" && asc == false)
+                    {
+
+                    }
+
+
 
                         SqlDataReader reader = cmd.ExecuteReader();
                         List<Product> products = new List<Product>();
