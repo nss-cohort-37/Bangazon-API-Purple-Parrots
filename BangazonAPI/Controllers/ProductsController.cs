@@ -61,7 +61,7 @@ namespace BangazonAPI.Controllers
                                             ORDER BY DateAdded DESC";
                     }
 
-                    if (sortBy == "popularity")
+                     if (sortBy == "popularity")
                     {
                         cmd.CommandText = @"Select p.Id, p.ProductTypeId, p.CustomerId, p.Price, p.[Description], p.Title, p.DateAdded, COUNT(op.ProductId) AS PopularCount
                                             FROM Product p                                      
@@ -72,12 +72,16 @@ namespace BangazonAPI.Controllers
 
                     if (sortBy == "price" && asc == true)
                     {
-
+                        cmd.CommandText = @"Select Id, ProductTypeId, CustomerId, Price, Description, Title, DateAdded 
+                                            FROM Product
+                                            ORDER BY Price ASC";
                     }
 
-                    if(sortBy == "price" && asc == false)
+                    if (sortBy == "price" && asc == false)
                     {
-
+                        cmd.CommandText = @"Select Id, ProductTypeId, CustomerId, Price, Description, Title, DateAdded 
+                                            FROM Product
+                                            ORDER BY Price DESC";
                     }
 
 
