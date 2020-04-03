@@ -34,32 +34,50 @@ namespace BangazonAPI.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get([FromQuery] string available)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT Id, PurchaseDate, DecomissionDate, Make, Model FROM Computer";
+                    cmd.CommandText = @"SELECT Id, PurchaseDate, DecomissionDate, Make, Model FROM Computer
+                                        WHERE 1=1";
+
+                    
+                        if (available == "true")
+                        {
+                            var availableComputers = GetAvailableComputers(available);
+                            return Ok(availableComputers);
+                        }
+
+                    if (available == "false")
+                    {
+                        var unavailableComputers = GetUnavailableComputers(available);
+                        return Ok(unavailableComputers);
+                    }
+
+
 
                     SqlDataReader reader = cmd.ExecuteReader();
-                    List<Computer> computers = new List<Computer>();
+                            List<Computer> computers = new List<Computer>();
 
-
-                    while (reader.Read())
-                    {
-                        Computer computer = new Computer
+                    while(reader.Read())
+                    { 
+                            Computer computer = new Computer
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             PurchaseDate = reader.GetDateTime(reader.GetOrdinal("PurchaseDate")),
-                            DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate")),
                             Make = reader.GetString(reader.GetOrdinal("Make")),
                             Model = reader.GetString(reader.GetOrdinal("Model"))
 
-
-
                         };
+
+                        //checks against db to return nullable decomissiondate field
+                        if (!reader.IsDBNull(reader.GetOrdinal("DecomissionDate")))
+                        {
+                            computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
+                        }
 
                         computers.Add(computer);
                     }
@@ -69,6 +87,109 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
+
+
+        private List<Computer> GetAvailableComputers([FromQuery] string available)
+            {
+                using (SqlConnection conn = Connection)
+                {
+                    conn.Open();
+                    using (SqlCommand cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = cmd.CommandText = @"SELECT c.Id, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model, e.ComputerId
+                                            FROM Computer c 
+                                            LEFT JOIN Employee e ON c.Id = e.ComputerId";
+
+
+                                SqlDataReader reader = cmd.ExecuteReader();
+                                List<Computer> computers = new List<Computer>();
+
+ 
+                                while (reader.Read())
+                    {
+                        if (reader.IsDBNull(reader.GetOrdinal("ComputerId")))
+                        {
+                            Computer computer = new Computer
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                PurchaseDate = reader.GetDateTime(reader.GetOrdinal("PurchaseDate")),
+                                Make = reader.GetString(reader.GetOrdinal("Make")),
+                                Model = reader.GetString(reader.GetOrdinal("Model"))
+                            };
+
+
+
+                            //checks against db to return nullable decomissiondate field
+                            if (!reader.IsDBNull(reader.GetOrdinal("DecomissionDate")))
+                            {
+                                computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
+                            }
+                            else 
+                            {
+                                computer.DecomissionDate = null;
+                            }
+
+                            computers.Add(computer);
+                        }
+                    }
+                            reader.Close();
+
+                            return computers;
+                        }
+                    }
+                }
+
+        private List<Computer> GetUnavailableComputers([FromQuery] string available)
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = cmd.CommandText = @"SELECT c.Id, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model
+                                            FROM Computer c 
+                                            LEFT JOIN Employee e ON c.Id = e.ComputerId";
+
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+                    List<Computer> computers = new List<Computer>();
+
+
+                    while (reader.Read())
+                    {
+                       
+                        
+                            Computer computer = new Computer
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                PurchaseDate = reader.GetDateTime(reader.GetOrdinal("PurchaseDate")),
+                                Make = reader.GetString(reader.GetOrdinal("Make")),
+                                Model = reader.GetString(reader.GetOrdinal("Model"))
+                            };
+
+
+
+                            //checks against db to return nullable decomissiondate field
+                            if (!reader.IsDBNull(reader.GetOrdinal("DecomissionDate")))
+                            {
+                                computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
+                            }
+                        else
+                        {
+                            computer.DecomissionDate = null;
+                        }
+
+
+                        computers.Add(computer);
+                        
+                    }
+                    reader.Close();
+
+                    return computers;
+                }
+            }
+        }
+
 
         [HttpGet("{id}", Name = "GetComputer")]
         public async Task<IActionResult> Get([FromRoute] int id)
@@ -91,12 +212,17 @@ namespace BangazonAPI.Controllers
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             PurchaseDate = reader.GetDateTime(reader.GetOrdinal("PurchaseDate")),
-                            DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate")),
                             Make = reader.GetString(reader.GetOrdinal("Make")),
                             Model = reader.GetString(reader.GetOrdinal("Model"))
 
 
                         };
+
+                        //checks against db to return nullable decomissiondate field
+                        if (!reader.IsDBNull(reader.GetOrdinal("DecomissionDate")))
+                        {
+                            computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
+                        }
                     }
                     reader.Close();
 
@@ -155,6 +281,9 @@ namespace BangazonAPI.Controllers
 
                         cmd.Parameters.Add(new SqlParameter("@id", id));
 
+
+                      
+
                         int rowsAffected = cmd.ExecuteNonQuery();
                         if (rowsAffected > 0)
                         {
@@ -162,6 +291,8 @@ namespace BangazonAPI.Controllers
                         }
                         throw new Exception("No rows affected");
                     }
+
+
                 }
             }
             catch (Exception)
