@@ -55,9 +55,6 @@ namespace BangazonAPI.Controllers
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             Name = reader.GetString(reader.GetOrdinal("Name")),
-                            
-                            
-
                         };
 
                         productTypes.Add(productType);
@@ -227,7 +224,6 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
-
 
         private ProductType GetProductType(int id)
         {
