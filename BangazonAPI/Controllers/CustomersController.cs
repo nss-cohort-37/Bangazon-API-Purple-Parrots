@@ -91,10 +91,10 @@ namespace BangazonAPI.Controllers
                         SELECT
                            c.Id, c.FirstName, c.LastName, c.CreatedDate, c.Active, c.Address, c.City, c.State, c.Email, c.Phone
                         FROM 
-                            Customer c
-                        WHERE 
-                            Id = @id";
-                    cmd.Parameters.Add(new SqlParameter("@id", id));
+                            Customer c";
+                    //    WHERE 
+                    //        Id = @id";
+                    //cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Customer customer = null;
