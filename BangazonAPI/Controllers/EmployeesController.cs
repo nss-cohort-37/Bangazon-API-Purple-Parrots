@@ -34,14 +34,24 @@ namespace BangazonAPI.Controllers
 
 
         [HttpGet]
-        public async Task<IActionResult> Get()
+        public async Task<IActionResult> Get(string firstName, string lastName)
         {
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"SELECT Id, FirstName, LastName, DepartmentId, Email, IsSupervisor, ComputerId From Employee";
+                    cmd.CommandText = @"SELECT Id, FirstName, LastName, DepartmentId, Email, IsSupervisor, ComputerId From Employee
+                                        WHERE 1=1";
+                    if (firstName != null) {
+                        cmd.CommandText += " AND FirstName LIKE @fname";
+                        cmd.Parameters.Add(new SqlParameter("@fname", "%" + firstName + "%"));
+                    }
+                    if (lastName != null)
+                    {
+                        cmd.CommandText += " AND lastName LIKE @lname";
+                        cmd.Parameters.Add(new SqlParameter("@lname", "%" + lastName + "%"));
+                    }
 
                     SqlDataReader reader = cmd.ExecuteReader();
                     List<Employee> employees = new List<Employee>();
@@ -147,8 +157,6 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@IsSupervisor", employee.IsSupervisor));
                     cmd.Parameters.Add(new SqlParameter("@ComputerId", employee.ComputerId));
 
-
-
                     int newId = (int)cmd.ExecuteScalar();
                     employee.Id = newId;
                     return CreatedAtRoute("GetEmployee", new { id = newId }, employee);
@@ -167,7 +175,7 @@ namespace BangazonAPI.Controllers
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = @"UPDATE Employee
-                                            SET FirstName = @Name,
+                                            SET FirstName = @FirstName,
                                                 LastName = @LastName,
                                                 DepartmentId = @DepartmentId,
                                                 Email = @Email,
