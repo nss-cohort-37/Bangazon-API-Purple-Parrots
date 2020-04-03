@@ -185,6 +185,7 @@ namespace BangazonAPI.Controllers
                     }
                 }
             }
+
             catch (Exception)
             {
                 if (!PaymentTypeExists(id))

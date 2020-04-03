@@ -31,49 +31,20 @@ namespace CustomerWalkerAPI.Controllers
 
         //Get All
         [HttpGet]
-        public async Task<IActionResult> Get()
+           public async Task<IActionResult> Get(
+            [FromQuery] string include)
         {
-            using (SqlConnection conn = Connection)
+            if (include == "products")
             {
-                conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand())
-                {
-                    cmd.CommandText = @"Select c.Id, c.FirstName, c.LastName, c.CreatedDate, c.Active, c.Address, c.City, c.State, c.Email, c.Phone
-                        FROM Customer c";
-                      
-                    SqlDataReader reader = cmd.ExecuteReader();
-                    List<Customer> customers = new List<Customer>();
-
-                    while (reader.Read())
-                    {
-                        Customer customer = new Customer
-                        {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
-                            Active = reader.GetBoolean(reader.GetOrdinal("Active")),
-                            Address = reader.GetString(reader.GetOrdinal("Address")),
-                            City = reader.GetString(reader.GetOrdinal("City")),
-                            State = reader.GetString(reader.GetOrdinal("State")),
-                            Email = reader.GetString(reader.GetOrdinal("Email")),
-                            Phone = reader.GetString(reader.GetOrdinal("Phone"))
-                        };
-                        //if (!reader.IsDBNull(reader.GetOrdinal("Notes")))
-                        //{
-                        //    customer.Notes = reader.GetString(reader.GetOrdinal("Notes"));
-                        //}
-
-                        customers.Add(customer);
-                    }
-                    reader.Close();
-
-                    return Ok(customers);
-                }
+                var products = GetAllCustomersProduct();
+                return Ok(products);
+            }
+            else
+            {
+                return Ok(GetAllCustomers());
             }
         }
 
-        //Get by ID
         [HttpGet("{id}", Name = "GetCustomer")]
         public async Task<IActionResult> Get([FromRoute] int id)
         {
@@ -82,9 +53,13 @@ namespace CustomerWalkerAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"Select c.Id, c.FirstName, c.LastName, c.CreatedDate, c.Active, c.Address, c.City, c.State, c.Email, c.Phone
-                    FROM Customer c
-                    Where c.Id = @id";
+                    cmd.CommandText = @"
+                        SELECT
+                           c.Id, c.FirstName, c.LastName, c.CreatedDate, c.Active, c.Address, c.City, c.State, c.Email, c.Phone
+                        FROM 
+                            Customer c
+                        WHERE 
+                            Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -103,12 +78,9 @@ namespace CustomerWalkerAPI.Controllers
                             City = reader.GetString(reader.GetOrdinal("City")),
                             State = reader.GetString(reader.GetOrdinal("State")),
                             Email = reader.GetString(reader.GetOrdinal("Email")),
-                            Phone = reader.GetString(reader.GetOrdinal("Phone"))
+                            Phone = reader.GetString(reader.GetOrdinal("Phone")),
+                            Product = new List<Product>()
                         };
-                        //if (!reader.IsDBNull(reader.GetOrdinal("Notes")))
-                        //{
-                        //    customer.Notes = reader.GetString(reader.GetOrdinal("Notes"));
-                        //}
                     }
                     reader.Close();
 
@@ -116,6 +88,7 @@ namespace CustomerWalkerAPI.Controllers
                 }
             }
         }
+
         //Post
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] Customer customer)
@@ -229,6 +202,94 @@ namespace CustomerWalkerAPI.Controllers
                 else
                 {
                     throw;
+                }
+            }
+        }
+
+         private Customer GetAllCustomersProduct()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT c.Id, c.FirstName, c.LastName, c.CreatedDate, c.Active, c.[Address], c.City, c.[State], c.Email, c.Phone, p.Id as ProductId, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.[Description]
+                                        FROM Customer c
+                                        LEFT JOIN Product p ON c.Id = p.ProductTypeId";
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    Customer customer = null;
+
+                    if (reader.Read())
+                    {
+                        customer = new Customer
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
+                            Active = reader.GetBoolean(reader.GetOrdinal("Active")),
+                            Address = reader.GetString(reader.GetOrdinal("Address")),
+                            City = reader.GetString(reader.GetOrdinal("City")),
+                            State = reader.GetString(reader.GetOrdinal("State")),
+                            Email = reader.GetString(reader.GetOrdinal("Email")),
+                            Phone = reader.GetString(reader.GetOrdinal("Phone")),
+                            Product = new List<Product>()
+                        };
+                    }
+                    customer.Product.Add(new Product()
+                    {
+                        Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                        DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
+                        ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                        CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
+                        Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                        Title = reader.GetString(reader.GetOrdinal("Title")),
+                        Description = reader.GetString(reader.GetOrdinal("Description"))
+                    });
+                    reader.Close();
+
+                    return customer;
+                }
+            }
+        }
+
+        private List<Customer> GetAllCustomers()
+        {
+            using (SqlConnection conn = Connection)
+            {
+                conn.Open();
+                using (SqlCommand cmd = conn.CreateCommand())
+                {
+                    cmd.CommandText = @"SELECT c.Id, c.FirstName, c.LastName, c.CreatedDate, c.Active, c.Address, c.City, c.State, c.Email, c.Phone
+                                        FROM Customer c";
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    List<Customer> customers = new List<Customer>(); 
+
+                    while(reader.Read())
+                    {
+                        Customer customer = new Customer
+                        {
+                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                            CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
+                            Active = reader.GetBoolean(reader.GetOrdinal("Active")),
+                            Address = reader.GetString(reader.GetOrdinal("Address")),
+                            City = reader.GetString(reader.GetOrdinal("City")),
+                            State = reader.GetString(reader.GetOrdinal("State")),
+                            Email = reader.GetString(reader.GetOrdinal("Email")),
+                            Phone = reader.GetString(reader.GetOrdinal("Phone")),
+                        };
+                        customers.Add(customer);
+                    }
+                    
+                    reader.Close();
+
+                    return customers;
                 }
             }
         }
