@@ -97,8 +97,8 @@ namespace BangazonAPI.Controllers
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
                         cmd.CommandText = cmd.CommandText = @"SELECT c.Id, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model
-                                            FROM Computer c 
-                                            WHERE DecomissionDate IS NULL";
+                                                              FROM Computer c 
+                                                              WHERE DecomissionDate IS NULL AND Id NOT IN (SELECT ComputerId FROM Employee);";
 
 
                                 SqlDataReader reader = cmd.ExecuteReader();
@@ -107,7 +107,8 @@ namespace BangazonAPI.Controllers
  
                                 while (reader.Read())
                     {
-                        
+                        //if (reader.IsDBNull(reader.GetOrdinal("ComputerId")))
+                        //{
                             Computer computer = new Computer
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("Id")),
@@ -123,7 +124,7 @@ namespace BangazonAPI.Controllers
                             {
                                 computer.DecomissionDate = reader.GetDateTime(reader.GetOrdinal("DecomissionDate"));
                             }
-                            else 
+                            else
                             {
                                 computer.DecomissionDate = null;
                             }
@@ -146,8 +147,8 @@ namespace BangazonAPI.Controllers
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
                     cmd.CommandText = cmd.CommandText = @"SELECT c.Id, c.PurchaseDate, c.DecomissionDate, c.Make, c.Model
-                                            FROM Computer c 
-                                            WHERE DecomissionDate IS NOT NULL";
+                                                          FROM Computer c 
+                                                          WHERE DecomissionDate IS NOT NULL OR Id = ANY (SELECT ComputerId FROM Employee)";
 
 
                     SqlDataReader reader = cmd.ExecuteReader();
