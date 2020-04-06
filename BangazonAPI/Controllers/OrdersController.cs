@@ -38,25 +38,29 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"Select o.Id, o.CustomerId, o.UserPaymentTypeId, o.ProductId, p.Name AS ProductName, p.DateAdded, p.ProductTypeId, p.CustomerId, p.PriceDescription
+                    cmd.CommandText = @"Select o.Id, o.CustomerId, o.UserPaymentTypeId, p.Id, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Description, op.Id, op.OrderId, op.ProductId
                         FROM Order o
                         Left Join Product p
-                        On o.ProductId = p.Id";
+                        On op.ProductId = p.Id
+                        LEFT Join OrderProduct op
+                        ON o.Id = op.OrderId
+                        WHERE o.CustomerId = customerId";
 
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     List<Order> orders = new List<Order>();
+                    Order order = null;
 
                     while (reader.Read())
                     {
-                        Order order = new Order
+                         order = new Order
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
                             UserPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId")),
-                            ProductId = reader.GetInt32(reader.GetOrdinal("ProductId")),
-                            Product = new Product()
+                             List <Product> Products()
                             {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
                                 DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
                                 ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
                                 CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
@@ -89,7 +93,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"Select o.Id, o.CustomerId, o.UserPaymentTypeId, o.ProductId, p.Name AS ProductName, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.Description
+                    cmd.CommandText = @"Select o.Id, o.CustomerId, o.UserPaymentTypeId, o.ProductId, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.Description
                         FROM Order o
                         Left Join Product p
                         On o.ProductId = p.Id
@@ -244,7 +248,7 @@ namespace BangazonAPI.Controllers
                 conn.Open();
                 using (SqlCommand cmd = conn.CreateCommand())
                 {
-                    cmd.CommandText = @"Select o.Id, o.CustomerId, o.UserPaymentTypeId, o.ProductId, p.Name AS ProductName, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.Description
+                    cmd.CommandText = @"Select o.Id, o.CustomerId, o.UserPaymentTypeId, o.ProductId, p.DateAdded, p.ProductTypeId, p.CustomerId, p.Price, p.Title, p.Description
                         FROM Order o
                         Left Join Product p
                         On o.ProductId = p.Id
