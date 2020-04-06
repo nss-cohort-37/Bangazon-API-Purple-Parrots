@@ -109,7 +109,7 @@ namespace BangazonAPI.Controllers
         //localhost:5000/api/userpaymenttypes gives error
         //localhost:5000/api/userpaymenttype  now it works??? 
 
-        [HttpPost]
+        [HttpPost (Name = "PostUserPaymentType")]
         public async Task<IActionResult> Post([FromBody] UserPaymentType userpaymentype)
         {
             using (SqlConnection conn = Connection)
@@ -129,7 +129,7 @@ namespace BangazonAPI.Controllers
 
                     int newId = (int)cmd.ExecuteScalar();
                     userpaymentype.Id = newId;
-                    return CreatedAtRoute("AddUserPaymentType", new { id = newId }, userpaymentype);
+                    return CreatedAtRoute("PostUserPaymentType", new { id = newId }, userpaymentype);
                 }
             }
         }
