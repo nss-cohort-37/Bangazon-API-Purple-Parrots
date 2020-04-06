@@ -58,8 +58,8 @@ namespace BangazonAPI.Controllers
                             Id = reader.GetInt32(reader.GetOrdinal("Id")),
                             CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId")),
                             UserPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId")),
-                             List <Product> Products()
-                            {
+                             Product = new Product()
+                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("Id")),
                                 DateAdded = reader.GetDateTime(reader.GetOrdinal("DateAdded")),
                                 ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
