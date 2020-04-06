@@ -13,10 +13,10 @@ namespace BangazonAPI.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class OrderController : ControllerBase
+    public class OrdersController : ControllerBase
     {
         private readonly IConfiguration _config;
-        public OrderController(IConfiguration config)
+        public OrdersController(IConfiguration config)
         {
             _config = config;
         }
@@ -35,7 +35,8 @@ namespace BangazonAPI.Controllers
         //Get All
         [HttpGet]
         public async Task<IActionResult> Get(
-            [FromQuery]int? customerId, bool cart)
+            [FromQuery] int? customerId,
+            [FromQuery] bool cart)
             {
                 //if cart is true and ID is not null
                 if (cart == true && customerId != null)
@@ -46,7 +47,7 @@ namespace BangazonAPI.Controllers
                 //
                 else
                 {
-                    var order = GetOrder(customerId);
+                    var order = GetOrders(customerId);
                     return Ok(order);
                 }
 
@@ -66,7 +67,7 @@ namespace BangazonAPI.Controllers
                     OrderProduct.OrderId as OPOrderID, OrderProduct.ProductID as OPProductID,
                     P.Id as ProductId, P.DateAdded as ProductDateAdded, P.ProductTypeId as ProductTypeId, P.CustomerId as ProductCustomerID, P.Price, P.Title, P.Description
                     FROM [Order] o
-                    LEFT JOIN OrderProduct ON [Order].Id = OrderProduct.OrderId
+                    LEFT JOIN OrderProduct ON o.Id = OrderProduct.OrderId
                     LEFT JOIN Product as P ON OrderProduct.ProductId = P.Id
                     WHERE o.Id = @id";
                     cmd.Parameters.Add(new SqlParameter("@id", id));
@@ -81,8 +82,9 @@ namespace BangazonAPI.Controllers
                             //creates order
                             order = new Order
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId"))
+                                Id = reader.GetInt32(reader.GetOrdinal("OrderId")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("OrderCustomerId")),
+                                Products = new List<Product>()
                             };
 
                             //If there is a payment attachmented it assigns the ID from db to the order
@@ -90,33 +92,27 @@ namespace BangazonAPI.Controllers
                             {
                                 order.UserPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId"));
                             }
+                        }
 
-                            //If there is a productId 
-                            if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
-                            {
-                                //If the order id matches the product's Order ID
-                                if (order.Id == reader.GetInt32(reader.GetOrdinal("OPOrderId")))
-                                {
-                                    //creates product
-                                    Product product = new Product
-                                    {
-                                        Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
-                                        CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
-                                        ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                                        DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
-                                        Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                        Title = reader.GetString(reader.GetOrdinal("Title")),
-                                        Description = reader.GetString(reader.GetOrdinal("Description"))
-                                    };
-                                    // Added product to order
-                                    order.Products.Add(product);
-                                }
-                            }
-                        }
-                        else
+                        //If there is a productId 
+                        if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
                         {
-                            return NotFound();
+                                //creates product
+                                Product product = new Product
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                    CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                                    Description = reader.GetString(reader.GetOrdinal("Description"))
+                                };
+                                // Added product to order
+                                order.Products.Add(product);
                         }
+                                
+                       
                     }
                         reader.Close();
                         return Ok(order);
@@ -125,14 +121,12 @@ namespace BangazonAPI.Controllers
         }
 
 
-            //method to check if shopping cart exists
-            //Order orderCheck = OrderCartExists(order.CustomerId);
         //Post
         [HttpPost]
         public async Task<IActionResult> Post([FromBody] CustomerProduct customerProduct)
         {
             Order order = OrderCartExists(customerProduct.CustomerId);
-            if (order == null)
+            if (order.Id == 0)
             {
                 //Post METHOD GO CREATE AN EMPTY ORDER
                 PostOrder(order, customerProduct.CustomerId);
@@ -149,7 +143,7 @@ namespace BangazonAPI.Controllers
                                         VALUES (@OrderId, @productId)";
 
                     cmd.Parameters.Add(new SqlParameter("@OrderId", order.Id));
-                    cmd.Parameters.Add(new SqlParameter("@userPaymentTypeId", customerProduct.ProductId));
+                    cmd.Parameters.Add(new SqlParameter("@ProductId", customerProduct.ProductId));
                     //(object) is a cast it's like a built in interface to treat these as an object, allowing you use "??" because order.Notes and DBNull are different types 
                     //the "??" coaslesce operator specifies to use DBNull.Value as the backup if order.Notes is empty
                     //cmd.Parameters.Add(new SqlParameter("@notes", (object)order.Notes ?? DBNull.Value));
@@ -270,8 +264,9 @@ namespace BangazonAPI.Controllers
                             //creates order
                             order = new Order
                             {
-                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId"))
+                                Id = reader.GetInt32(reader.GetOrdinal("OrderId")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("OrderCustomerId")),
+                                Products = new List<Product>()
                             };
 
                             //If there is a payment attachmented it assigns the ID from db to the order
@@ -309,7 +304,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-        private Order GetOrder(int? customerId)
+        private List<Order> GetOrders(int? customerId)
         {
             using (SqlConnection conn = Connection)
             {
@@ -327,50 +322,71 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@id", customerId));
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    Order order = null;
+                    List<Order> orders = new List<Order>();
 
                     while (reader.Read())
                     {
-                        if (order == null)
+                        var orderId = reader.GetInt32(reader.GetOrdinal("OrderID"));
+                        var orderAlreadyCreated = orders.FirstOrDefault(o => o.Id == orderId);
+                        if (orderAlreadyCreated == null)
                         {
-                            //creates order
-                            order = new Order
-                            {
-                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                                CustomerId = reader.GetInt32(reader.GetOrdinal("CustomerId"))
-                            };
+                            Order order = new Order
 
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("OrderID")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("OrderCustomerId")),
+                                Products = new List<Product>()
+                            };
                             //If there is a payment attachmented it assigns the ID from db to the order
                             if (!reader.IsDBNull(reader.GetOrdinal("UserPaymentTypeId")))
                             {
                                 order.UserPaymentTypeId = reader.GetInt32(reader.GetOrdinal("UserPaymentTypeId"));
                             }
-
-                            //If there is a productId 
-                            if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
+                            orders.Add(order);
+                            var hasProduct = !reader.IsDBNull(reader.GetOrdinal("ProductId"));
+                            if (hasProduct)
                             {
-                                //If the order id matches the product's Order ID
-                                if (order.Id == reader.GetInt32(reader.GetOrdinal("OPOrderId")))
+
+                                //creates product
+                                Product product = new Product
                                 {
-                                    //creates product
-                                    Product product = new Product
-                                    {
-                                        Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
-                                        CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
-                                        ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                                        DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
-                                        Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                        Title = reader.GetString(reader.GetOrdinal("Title")),
-                                        Description = reader.GetString(reader.GetOrdinal("Description"))
-                                    };
-                                    // Added product to order
-                                    order.Products.Add(product);
-                                }
+                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                    CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                                    Description = reader.GetString(reader.GetOrdinal("Description"))
+                                };
+                                // Added product to order
+                                order.Products.Add(product);
                             }
                         }
+                        else
+                        {
+                            var hasProduct = !reader.IsDBNull(reader.GetOrdinal("ProductId"));
+                            if (hasProduct)
+                            {
+
+                                //creates product
+                                Product product = new Product
+                                {
+                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                    CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                    Title = reader.GetString(reader.GetOrdinal("Title")),
+                                    Description = reader.GetString(reader.GetOrdinal("Description"))
+                                };
+                                // Added product to order
+                                orderAlreadyCreated.Products.Add(product);
+                            }
+                        }
+                        
                     }
                     reader.Close();
-                    return order;
+                    return orders;
                 }
             }
         }
