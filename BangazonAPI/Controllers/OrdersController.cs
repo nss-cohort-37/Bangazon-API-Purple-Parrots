@@ -30,29 +30,29 @@ namespace BangazonAPI.Controllers
         }
 
         //get by customerId
-      
+
 
         //Get All
         [HttpGet]
         public async Task<IActionResult> Get(
             [FromQuery] int? customerId,
             [FromQuery] bool cart)
+        {
+            //if cart is true and ID is not null
+            if (cart == true && customerId != null)
             {
-                //if cart is true and ID is not null
-                if (cart == true && customerId != null)
-                {
-                    var order = GetOrderWithCart(customerId);
-                    return Ok(order);
-                }
-                //
-                else
-                {
-                    var order = GetOrders(customerId);
-                    return Ok(order);
-                }
-
-
+                var order = GetOrderWithCart(customerId);
+                return Ok(order);
             }
+            //
+            else
+            {
+                var order = GetOrders(customerId);
+                return Ok(order);
+            }
+
+
+        }
 
         //Get by ID
         [HttpGet("{id}", Name = "GetOrder")]
@@ -97,27 +97,27 @@ namespace BangazonAPI.Controllers
                         //If there is a productId 
                         if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
                         {
-                                //creates product
-                                Product product = new Product
-                                {
-                                    Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
-                                    CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
-                                    ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
-                                    DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
-                                    Price = reader.GetDecimal(reader.GetOrdinal("Price")),
-                                    Title = reader.GetString(reader.GetOrdinal("Title")),
-                                    Description = reader.GetString(reader.GetOrdinal("Description"))
-                                };
-                                // Added product to order
-                                order.Products.Add(product);
+                            //creates product
+                            Product product = new Product
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
+                                CustomerId = reader.GetInt32(reader.GetOrdinal("ProductCustomerId")),
+                                ProductTypeId = reader.GetInt32(reader.GetOrdinal("ProductTypeId")),
+                                DateAdded = reader.GetDateTime(reader.GetOrdinal("ProductDateAdded")),
+                                Price = reader.GetDecimal(reader.GetOrdinal("Price")),
+                                Title = reader.GetString(reader.GetOrdinal("Title")),
+                                Description = reader.GetString(reader.GetOrdinal("Description"))
+                            };
+                            // Added product to order
+                            order.Products.Add(product);
                         }
-                                
-                       
+
+
                     }
-                        reader.Close();
-                        return Ok(order);
-                } 
-            } 
+                    reader.Close();
+                    return Ok(order);
+                }
+            }
         }
 
 
@@ -135,7 +135,7 @@ namespace BangazonAPI.Controllers
             using (SqlConnection conn = Connection)
             {
                 conn.Open();
-                using (SqlCommand cmd = conn.CreateCommand()) 
+                using (SqlCommand cmd = conn.CreateCommand())
 
                 {
                     cmd.CommandText = @"INSERT INTO OrderProduct (OrderId, ProductId)
@@ -169,9 +169,9 @@ namespace BangazonAPI.Controllers
                             cmd.CommandText = @"UPDATE [Order]
                                             SET UserPaymentTypeId = @userPayment 
                                             WHERE Id = @id";
-                                            
+
                             cmd.Parameters.Add(new SqlParameter("@id", id));
-                            cmd.Parameters.Add(new SqlParameter("@userPayment", order.UserPaymentTypeId));                           
+                            cmd.Parameters.Add(new SqlParameter("@userPayment", order.UserPaymentTypeId));
 
                             int rowsAffected = cmd.ExecuteNonQuery();
                             if (rowsAffected > 0)
@@ -405,7 +405,7 @@ namespace BangazonAPI.Controllers
                                 orderAlreadyCreated.Products.Add(product);
                             }
                         }
-                        
+
                     }
                     reader.Close();
                     return orders;
@@ -457,7 +457,7 @@ namespace BangazonAPI.Controllers
             }
         }
         //method that checks to see if shopping cart exists already
-         private Order OrderCartExists(int customerId)
+        private Order OrderCartExists(int customerId)
         {
             using (SqlConnection conn = Connection)
             {
@@ -484,6 +484,6 @@ namespace BangazonAPI.Controllers
                 }
             }
         }
-        
+
     }
 }
