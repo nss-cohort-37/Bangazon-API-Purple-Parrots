@@ -29,6 +29,13 @@ namespace BangazonAPI.Controllers
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="id"></param>
+        /// <param name="include"></param>
+        /// <returns></returns>
+
         //Get All by Id with optional include products info
         [HttpGet("{id}", Name = "GetCustomer")]
         public async Task<IActionResult> Get(
