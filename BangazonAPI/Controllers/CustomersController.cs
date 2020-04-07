@@ -8,7 +8,7 @@ using System.Data;
 using Microsoft.Data.SqlClient;
 using Microsoft.AspNetCore.Http;
 using BangazonAPI.Models;
-
+ 
 namespace BangazonAPI.Controllers
 {
     [Route("api/[controller]")]
