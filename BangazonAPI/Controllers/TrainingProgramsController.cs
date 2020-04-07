@@ -104,7 +104,8 @@ namespace BangazonAPI.Controllers
 
                         if (!reader.IsDBNull(reader.GetOrdinal("EmployeeId")))
                         {
-                            Employee employee = new Employee()
+                            trainingProgram.Employees.Add(new Employee()
+                            //Employee employee = new Employee()
                             {
                                 Id = reader.GetInt32(reader.GetOrdinal("EmployeeId")),
                                 FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
@@ -114,13 +115,13 @@ namespace BangazonAPI.Controllers
                                 IsSupervisor = reader.GetBoolean(reader.GetOrdinal("IsSupervisor")),
                                 ComputerId = reader.GetInt32(reader.GetOrdinal("ComputerId"))
 
-                            };
+                            });
 
-                            if (!reader.IsDBNull(reader.GetOrdinal("EmployeeTrainingId")))
-                            {
-                                employee.Id = reader.GetInt32(reader.GetOrdinal("EmployeeId"));
-                            }
-                            trainingProgram.Employees.Add(employee);
+                            //if (!reader.IsDBNull(reader.GetOrdinal("EmployeeTrainingId")))
+                            //{
+                            //    employee.Id = reader.GetInt32(reader.GetOrdinal("EmployeeId"));
+                            //}
+                            //trainingProgram.Employees.Add(employee);
 
                         }
                         }
