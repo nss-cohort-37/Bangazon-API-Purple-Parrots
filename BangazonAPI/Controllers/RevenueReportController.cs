@@ -39,16 +39,16 @@ namespace BangazonAPI.Controllers
                 {
                     {
                         cmd.CommandText = @"
-SELECT pt.Id AS ProductTypeId, ISNULL(SUM(sales.Price), 0) AS Price, pt.[Name] FROM ProductType pt
-LEFT JOIN
-(
-SELECT p.Price, p.ProductTypeId FROM Product p
-JOIN OrderProduct op ON op.ProductId = p.Id
-JOIN[Order] o ON o.Id = op.OrderId
-WHERE o.UserPaymentTypeId is not null
-)
-Sales ON sales.ProductTypeId = pt.Id
-GROUP BY pt.Id, pt.[Name]";
+                                            SELECT pt.Id AS productTypeId, ISNULL(SUM(sales.Price), 0) AS totalRevenue, pt.[Name] as productType FROM ProductType pt
+                                            LEFT JOIN
+                                            (
+                                            SELECT p.Price, p.ProductTypeId FROM Product p
+                                            JOIN OrderProduct op ON op.ProductId = p.Id
+                                            JOIN[Order] o ON o.Id = op.OrderId
+                                            WHERE o.UserPaymentTypeId is not null
+                                            )
+                                            Sales ON sales.ProductTypeId = pt.Id
+                                            GROUP BY pt.Id, pt.[Name]";
                         SqlDataReader reader = cmd.ExecuteReader();
                         List<RevenueReport> revenueReport = new List<RevenueReport>();
                         RevenueReport reportItem = null;
@@ -56,12 +56,12 @@ GROUP BY pt.Id, pt.[Name]";
                         {
                             reportItem = new RevenueReport
                             {
-                                ProductTypeId = reader.GetInt32(reader.GetOrdinal("Id")),
-                                ProductType = reader.GetString(reader.GetOrdinal("Name"))
+                                ProductTypeId = reader.GetInt32(reader.GetOrdinal("productTypeId")),
+                                ProductType = reader.GetString(reader.GetOrdinal("productType"))
                             };
-                            if (!reader.IsDBNull(reader.GetOrdinal("Revenue")))
+                            if (!reader.IsDBNull(reader.GetOrdinal("totalRevenue")))
                             {
-                                reportItem.TotalRevenue = reader.GetDecimal(reader.GetOrdinal("Revenue"));
+                                reportItem.TotalRevenue = reader.GetDecimal(reader.GetOrdinal("totalRevenue"));
                             }
                             else
                             {
