@@ -185,7 +185,7 @@ namespace BangazonAPI.Controllers
                             cmd.CommandText = @"UPDATE Customer
                                             SET FirstName = @firstName, LastName = @lastName ,  CreatedDate = @createdDate, Active = @active, Address = @address,  City = @city,  State = @state, Email = @email, Phone = @phone
                                             WHERE Id = @id";
-                           
+
                             cmd.Parameters.Add(new SqlParameter("@id", id));
                             cmd.Parameters.Add(new SqlParameter("@firstName", customer.FirstName));
                             cmd.Parameters.Add(new SqlParameter("@lastName", customer.LastName));
@@ -258,7 +258,7 @@ namespace BangazonAPI.Controllers
             }
         }
 
-         private Customer GetCustomerProducts(int id)
+        private Customer GetCustomerProducts(int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -272,30 +272,30 @@ namespace BangazonAPI.Controllers
                     cmd.Parameters.Add(new SqlParameter("@id", id));
                     SqlDataReader reader = cmd.ExecuteReader();
 
-                    
+
                     Customer customer = null;
 
                     while (reader.Read())
                     {
                         if (customer == null)
-                        { 
-                        customer = new Customer()
                         {
-                            Id = reader.GetInt32(reader.GetOrdinal("Id")),
-                            FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
-                            LastName = reader.GetString(reader.GetOrdinal("LastName")),
-                            CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
-                            Active = reader.GetBoolean(reader.GetOrdinal("Active")),
-                            Address = reader.GetString(reader.GetOrdinal("Address")),
-                            City = reader.GetString(reader.GetOrdinal("City")),
-                            State = reader.GetString(reader.GetOrdinal("State")),
-                            Email = reader.GetString(reader.GetOrdinal("Email")),
-                            Phone = reader.GetString(reader.GetOrdinal("Phone")),
-                            Product = new List<Product>()
-                        };
-                    }
-                    //if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
-                    //{
+                            customer = new Customer()
+                            {
+                                Id = reader.GetInt32(reader.GetOrdinal("Id")),
+                                FirstName = reader.GetString(reader.GetOrdinal("FirstName")),
+                                LastName = reader.GetString(reader.GetOrdinal("LastName")),
+                                CreatedDate = reader.GetDateTime(reader.GetOrdinal("CreatedDate")),
+                                Active = reader.GetBoolean(reader.GetOrdinal("Active")),
+                                Address = reader.GetString(reader.GetOrdinal("Address")),
+                                City = reader.GetString(reader.GetOrdinal("City")),
+                                State = reader.GetString(reader.GetOrdinal("State")),
+                                Email = reader.GetString(reader.GetOrdinal("Email")),
+                                Phone = reader.GetString(reader.GetOrdinal("Phone")),
+                                Product = new List<Product>()
+                            };
+                        }
+                        //if (!reader.IsDBNull(reader.GetOrdinal("ProductId")))
+                        //{
                         customer.Product.Add(new Product()
                         {
                             Id = reader.GetInt32(reader.GetOrdinal("ProductId")),
@@ -328,7 +328,7 @@ namespace BangazonAPI.Controllers
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     Customer customer = null;
-                    if(reader.Read())
+                    if (reader.Read())
                     {
                         customer = new Customer
                         {
@@ -344,7 +344,7 @@ namespace BangazonAPI.Controllers
                             Phone = reader.GetString(reader.GetOrdinal("Phone")),
                         };
                     }
-                    
+
                     reader.Close();
                     return customer;
                 }
