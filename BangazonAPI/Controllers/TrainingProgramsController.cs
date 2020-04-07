@@ -165,7 +165,7 @@ namespace BangazonAPI.Controllers
 
         [HttpPost]
         [Route("{id}/employees") ]
-        public async Task<IActionResult> Post([FromBody] Employee employee, [FromRoute] int id)
+        public async Task<IActionResult> Post([FromBody] EmployeeTraining employeeTraining, [FromRoute] int id)
         {
             using (SqlConnection conn = Connection)
             {
@@ -175,7 +175,7 @@ namespace BangazonAPI.Controllers
                     cmd.CommandText = @"INSERT INTO EmployeeTraining (EmployeeId, TrainingProgramId)
                                         OUTPUT INSERTED.Id
                                         VALUES (@EmployeeId, @TrainingProgramId)";
-                    cmd.Parameters.Add(new SqlParameter("@EmployeeId", employee.Id));
+                    cmd.Parameters.Add(new SqlParameter("@EmployeeId", employeeTraining.EmployeeId));
                     cmd.Parameters.Add(new SqlParameter("@TrainingProgramId", id));
 
 
@@ -245,7 +245,7 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"UPDATE TrainingProgram
+                        cmd.CommandText = @"DELETE FROM TrainingProgram
                                             WHERE Id = @id";
                         cmd.Parameters.Add(new SqlParameter("@id", id));
                         int rowsAffected = cmd.ExecuteNonQuery();
@@ -281,7 +281,8 @@ namespace BangazonAPI.Controllers
                     conn.Open();
                     using (SqlCommand cmd = conn.CreateCommand())
                     {
-                        cmd.CommandText = @"UPDATE EmployeeTraining WHERE TrainingProgram = @id AND EmployeeId = employeeId";
+                        cmd.CommandText = @"DELETE FROM EmployeeTraining 
+                                            WHERE TrainingProgramId = @id AND EmployeeId = employeeId";
                                            
                         cmd.Parameters.Add(new SqlParameter("@id", id));
                         cmd.Parameters.Add(new SqlParameter("@employeeId", employeeId));
